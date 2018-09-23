@@ -14,9 +14,12 @@ import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.Text
+import javafx.stage.Screen
+import javafx.stage.Window
 import javafx.util.Duration
 import tornadofx.*
 import java.util.concurrent.atomic.AtomicReference
+
 
 class DisplayView : View() {
     override val root = BorderPane()
@@ -26,7 +29,7 @@ class DisplayView : View() {
         set(value) = shufflerRef.set(value)
 
     private val upperStatusText = Text().lowerTextStyled()
-    private val lowerStatusText = Text("点按以切换").lowerTextStyled()
+    private val lowerStatusText = Text("点按以切换. 按Ctrl + R以重载列表").lowerTextStyled()
     private val centerTextContainer = HBox()
     //    private val centerText = Text("--")
     private var centerText: String = "--"
@@ -40,6 +43,9 @@ class DisplayView : View() {
 //    private val emptyGaussianBlur = GaussianBlur(0.0)
     private val gaussianBlur = GaussianBlur(0.0)
     private val maxGaussianBlurRadius = 20.0
+
+    private val WINDOW_MIN_WIDTH = 1024
+    private val WINDOW_MIN_HEIGHT = 576
 
     private fun HBox.makeText(string: String, initialOpacity: Double = centerTextDefaultRefreshOpacity) = apply {
         clear()
@@ -56,7 +62,7 @@ class DisplayView : View() {
 
     init {
         setWindowMinSize(1024, 576)
-
+        currentWindow?.center()
         with(root) {
             background = Background(BackgroundFill(COLOR_INDIGO, CornerRadii.EMPTY, Insets.EMPTY))
             isFocusTraversable = true /* make sure this node can respond to key events properly */
@@ -82,6 +88,12 @@ class DisplayView : View() {
 
     }
 
+    private fun Window.center() {
+        val screenBounds = Screen.getPrimary().visualBounds
+        x = (screenBounds.width - WINDOW_MIN_WIDTH) / 2
+        y = (screenBounds.height - WINDOW_MIN_HEIGHT) / 2
+    }
+
     private fun reloadList() {
         try {
             shuffler = ShufflerBuilder.fromFile()
@@ -99,15 +111,33 @@ class DisplayView : View() {
                 keyframe(1.seconds) {}
             }
         } catch (e: Exception) {
-            alert(
-                    Alert.AlertType.ERROR,
-                    "无法读取列表",
-                    "无法读取列表。请将以UTF-8编码的逗号分隔符文件命名为list (无扩展名) 放在工作目录下。\n\n" +
-                            "如果您通过双击打开此应用，请把列表和应用程序本身放在同一目录下。\n\n\n" +
-                            "=== DETAIL === \n$e",
-                    ButtonType.OK
-            )
+            showReadFailureDialog(e)
         }
+    }
+
+    private fun showReadFailureDialog(e: Throwable) {
+        Alert(Alert.AlertType.ERROR, "无法读取列表", ButtonType.OK).apply {
+            width = 600.0
+            headerText = "读取列表时发生问题"
+            this.dialogPane.expandableContent = gridpane {
+                padding = Insets(10.0)
+                row {
+                    useMaxWidth = true
+                    label(
+                            "无法读取列表。请将以UTF-8编码的逗号分隔符文件命名为list (无扩展名) 放在工作目录下。\n" +
+                                    "如果您通过双击打开此应用，请把列表和应用程序本身放在同一目录下。"
+                    )
+                }
+                row {
+                    textarea(e.toString()) {
+                        useMaxSize = true
+                        isEditable = false
+                        isWrapText = true
+                    }
+                }
+                vgap = 10.0
+            }
+        }.showAndWait()
     }
 
     private fun forwardToNext() {
