@@ -22,6 +22,10 @@ import java.util.concurrent.atomic.AtomicReference
 
 
 class DisplayView : View() {
+    companion object {
+        const val WINDOW_MIN_WIDTH = 1024
+        const val WINDOW_MIN_HEIGHT = 576
+    }
     override val root = BorderPane()
     private var shufflerRef: AtomicReference<Shuffler<Named>?> = AtomicReference(null)
     var shuffler: Shuffler<Named>?
@@ -44,9 +48,6 @@ class DisplayView : View() {
     private val gaussianBlur = GaussianBlur(0.0)
     private val maxGaussianBlurRadius = 20.0
 
-    private val WINDOW_MIN_WIDTH = 1024
-    private val WINDOW_MIN_HEIGHT = 576
-
     private fun HBox.makeText(string: String, initialOpacity: Double = centerTextDefaultRefreshOpacity) = apply {
         clear()
         for (c in string) {
@@ -61,11 +62,11 @@ class DisplayView : View() {
     }
 
     init {
-        setWindowMinSize(1024, 576)
+        setWindowMinSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         currentWindow?.center()
         with(root) {
             background = Background(BackgroundFill(COLOR_INDIGO, CornerRadii.EMPTY, Insets.EMPTY))
-            isFocusTraversable = true /* make sure this node can respond to key events properly */
+//            isFocusTraversable = true /* make sure this node can respond to key events properly */
             initListeners()
             center = borderpane {
                 center = centerTextContainer.makeText(centerText).apply {
