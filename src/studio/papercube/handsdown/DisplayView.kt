@@ -1,5 +1,6 @@
 package studio.papercube.handsdown
 
+import javafx.geometry.HPos
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Node
@@ -18,6 +19,8 @@ import javafx.stage.Screen
 import javafx.stage.Window
 import javafx.util.Duration
 import tornadofx.*
+import java.awt.Desktop
+import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 
@@ -121,13 +124,27 @@ class DisplayView : View() {
             width = 600.0
             headerText = "读取列表时发生问题"
             this.dialogPane.expandableContent = gridpane {
-                padding = Insets(10.0)
+                padding = Insets(20.0)
                 row {
                     useMaxWidth = true
                     label(
                             "无法读取列表。请将以UTF-8编码的逗号分隔符文件命名为list (无扩展名) 放在工作目录下。\n" +
                                     "如果您通过双击打开此应用，请把列表和应用程序本身放在同一目录下。"
                     )
+                }
+                row {
+                    hbox {
+                        alignment = Pos.CENTER_RIGHT
+                        button("打开工作文件夹") {
+                            action {
+                                try {
+                                    Desktop.getDesktop().open(File("."))
+                                } catch (e: Exception) {
+                                    //ignored
+                                }
+                            }
+                        }
+                    }
                 }
                 row {
                     textarea(e.toString()) {
@@ -139,6 +156,20 @@ class DisplayView : View() {
                 vgap = 10.0
             }
         }.showAndWait()
+    }
+
+    private fun KeyFrameBuilder.keyValueShow(node: Node) {
+        keyvalue(node.opacityProperty(), 1.0)
+        keyvalue(node.rotateProperty(), 0.0, QuarticEaseOutInterpolator)
+        keyvalue(node.scaleXProperty(), 1.0, QuarticEaseOutInterpolator)
+        keyvalue(node.scaleYProperty(), 1.0, QuarticEaseOutInterpolator)
+    }
+
+    private fun KeyFrameBuilder.keyValueHide(node: Node) {
+        keyvalue(node.opacityProperty(), 0.0)
+        keyvalue(node.rotateProperty(), 15.0, QuadraticEaseOutInterpolator)
+        keyvalue(node.scaleXProperty(), 0.8, QuadraticEaseOutInterpolator)
+        keyvalue(node.scaleYProperty(), 0.8, QuadraticEaseOutInterpolator)
     }
 
     private fun forwardToNext() {
@@ -157,16 +188,15 @@ class DisplayView : View() {
                 }
                 for ((index: Int, node: Node) in nodes.withIndex()) {
                     keyframe(0.seconds) {
-                        keyvalue(node.opacityProperty(), 1.0)
-//                        keyvalue(node.effectProperty(), )
+                        keyValueShow(node)
                     }
                     val delay = 0 + index * letterDelay
                     keyframe(delay.seconds) {
-                        keyvalue(node.opacityProperty(), 1.0)
+                        keyValueShow(node)
                     }
                     val fadeOutTime = delay + fadeDuration
                     keyframe(fadeOutTime.seconds) {
-                        keyvalue(node.opacityProperty(), 0.0)
+                        keyValueHide(node)
                     }
                 }
             }.setOnFinished {
@@ -178,20 +208,20 @@ class DisplayView : View() {
                     keyframe(0.seconds) {
                         keyvalue(gaussianBlur.radiusProperty(), maxGaussianBlurRadius)
                     }
-                    keyframe((nodes.size * letterDelay + fadeDuration + 0.35).seconds) {
+                    keyframe((nodes.size * letterDelay + fadeDuration + 0.15).seconds) {
                         keyvalue(gaussianBlur.radiusProperty(), 0)
                     }
                     for ((index, node) in nodes.withIndex()) {
                         keyframe(0.seconds) {
-                            keyvalue(node.opacityProperty(), 0.0)
+                            keyValueHide(node)
                         }
                         val delay = 0 + index * letterDelay
                         keyframe(delay.seconds) {
-                            keyvalue(node.opacityProperty(), 0.0)
+                            keyValueHide(node)
                         }
                         val fadeOutTime = delay + fadeDuration
                         keyframe(fadeOutTime.seconds) {
-                            keyvalue(node.opacityProperty(), 1.0)
+                            keyValueShow(node)
                         }
                     }
                 }

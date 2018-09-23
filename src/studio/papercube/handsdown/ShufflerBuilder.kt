@@ -10,7 +10,7 @@ object ShufflerBuilder {
                 .filter(String::isNotBlank)
                 .map(PersonItem.Companion::parse)
                 .collect(Collectors.toList())
-        return if (list.hasIdenticalWeights()) UnweighedShffler(list) else WeighedShuffler(list)
+        return if (list.hasIdenticalWeights()) UnweightedShuffler(list) else WeightedShuffler(list)
     }
 
     private fun List<PersonItem>.hasIdenticalWeights(): Boolean {

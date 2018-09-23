@@ -20,14 +20,14 @@ interface Shuffler<out T> : Iterator<T>, Iterable<T> {
     }
 }
 
-class UnweighedShffler<out T>(items: List<T>) : Shuffler<T> {
+class UnweightedShuffler<out T>(items: List<T>) : Shuffler<T> {
     private val list = ArrayList(items)
     private val size = items.size
 
     private var index = 0
 
     init {
-
+        list.shuffle()
     }
 
     override fun hasNext(): Boolean {
@@ -43,7 +43,7 @@ class UnweighedShffler<out T>(items: List<T>) : Shuffler<T> {
     }
 }
 
-class WeighedShuffler<out T : Weighed>(items: List<T>) : Shuffler<T> {
+class WeightedShuffler<out T : Weighed>(items: List<T>) : Shuffler<T> {
     private val list = ArrayList(items)
     private val size = items.size
     private val weightRange = DoubleArray(items.size + 1)
