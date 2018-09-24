@@ -1,6 +1,5 @@
 package studio.papercube.handsdown
 
-import javafx.geometry.HPos
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Node
@@ -21,6 +20,7 @@ import javafx.util.Duration
 import tornadofx.*
 import java.awt.Desktop
 import java.io.File
+import java.io.FileNotFoundException
 import java.util.concurrent.atomic.AtomicReference
 
 
@@ -100,7 +100,7 @@ class DisplayView : View() {
 
     private fun reloadList() {
         try {
-            shuffler = ShufflerBuilder.fromFile()
+            shuffler = ShufflerBuilder.fromFile().requireNonEmpty()
             upperStatusText.text = "已刷新"
 //        upperStatusText.opacity = Math.random() * 1.0
             timeline {
@@ -120,9 +120,14 @@ class DisplayView : View() {
     }
 
     private fun showReadFailureDialog(e: Throwable) {
-        Alert(Alert.AlertType.ERROR, "无法读取列表", ButtonType.OK).apply {
+        Alert(Alert.AlertType.ERROR, "Error", ButtonType.OK).apply {
             width = 600.0
             headerText = "读取列表时发生问题"
+            contentText = when (e) {
+                is EmptyShufflerException -> "列表不能为空"
+                is FileNotFoundException -> "找不到列表"
+                else -> "读取列表时发生问题"
+            }
             this.dialogPane.expandableContent = gridpane {
                 padding = Insets(20.0)
                 row {

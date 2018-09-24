@@ -1,6 +1,7 @@
 package studio.papercube.handsdown
 
 import java.util.*
+import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
 
 private fun <T> MutableList<T>.swap(index1: Int, index2: Int) {
@@ -35,6 +36,7 @@ class UnweightedShuffler<out T>(items: List<T>) : Shuffler<T> {
     }
 
     override fun next(): T {
+        if (!hasNext()) throw NoSuchElementException("Empty shuffler")
         if (index >= size) {
             list.shuffle()
             index = 0
@@ -65,6 +67,7 @@ class WeightedShuffler<out T : Weighed>(items: List<T>) : Shuffler<T> {
     }
 
     override fun next(): T {
+        if (!hasNext()) throw NoSuchElementException("Empty shuffler")
         return list[binarySearch(nextRandomPoint())]
     }
 
@@ -79,5 +82,11 @@ class WeightedShuffler<out T : Weighed>(items: List<T>) : Shuffler<T> {
             } else r = mid
         }
         return l
+    }
+}
+
+open class EmptyShufflerException : IllegalArgumentException(){
+    override fun getLocalizedMessage(): String {
+        return "列表为空"
     }
 }

@@ -25,3 +25,7 @@ object ShufflerBuilder {
         return true
     }
 }
+
+fun <T : Shuffler<*>> T.requireNonEmpty(): T = apply {
+    if (!hasNext()) throw EmptyShufflerException()
+}
