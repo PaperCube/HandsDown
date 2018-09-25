@@ -67,6 +67,7 @@ class DisplayView : View() {
     init {
         setWindowMinSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         currentWindow?.center()
+        currentStage?.isAlwaysOnTop = true
         with(root) {
             background = Background(BackgroundFill(COLOR_INDIGO, CornerRadii.EMPTY, Insets.EMPTY))
 //            isFocusTraversable = true /* make sure this node can respond to key events properly */
