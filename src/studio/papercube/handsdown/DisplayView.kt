@@ -1,5 +1,6 @@
 package studio.papercube.handsdown
 
+import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Node
@@ -15,6 +16,7 @@ import javafx.scene.paint.Color
 import javafx.scene.text.Font
 import javafx.scene.text.Text
 import javafx.stage.Screen
+import javafx.stage.StageStyle
 import javafx.stage.Window
 import javafx.util.Duration
 import tornadofx.*
@@ -67,8 +69,15 @@ class DisplayView : View() {
     init {
         setWindowMinSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         currentWindow?.center()
-        currentStage?.isAlwaysOnTop = true
+        currentStage?.let {
+            it.isAlwaysOnTop = true
+        }
+
         with(root) {
+            val floatingFragment:FloatingFragment = find(FloatingFragment::class, mapOf("owner" to this@DisplayView))
+            floatingFragment.openModal(StageStyle.TRANSPARENT)
+            floatingFragment.initialize()
+
             background = Background(BackgroundFill(COLOR_INDIGO, CornerRadii.EMPTY, Insets.EMPTY))
 //            isFocusTraversable = true /* make sure this node can respond to key events properly */
             initListeners()
@@ -178,61 +187,89 @@ class DisplayView : View() {
         keyvalue(node.scaleYProperty(), 0.8, QuadraticEaseOutInterpolator)
     }
 
-    private fun forwardToNext() {
-        shuffler?.let {
-            val nextName = it.next().name
-            val fadeDuration = 0.3
-            val letterDelay = 0.1
+    private fun changeTextAnimated(text: String) {
+        val fadeDuration = 0.3
+        val letterDelay = 0.1
+        timeline {
+            /* ======== FADE OUT ========= */
+            val nodes = centerTextContainer.children.shuffled()
+            keyframe(0.seconds) {
+                keyvalue(gaussianBlur.radiusProperty(), 0)
+            }
+            keyframe(((nodes.size * letterDelay + fadeDuration) / 2).seconds) {
+                keyvalue(gaussianBlur.radiusProperty(), maxGaussianBlurRadius)
+            }
+            for ((index: Int, node: Node) in nodes.withIndex()) {
+                keyframe(0.seconds) {
+                    keyValueShow(node)
+                }
+                val delay = 0 + index * letterDelay
+                keyframe(delay.seconds) {
+                    keyValueShow(node)
+                }
+                val fadeOutTime = delay + fadeDuration
+                keyframe(fadeOutTime.seconds) {
+                    keyValueHide(node)
+                }
+            }
+        }.setOnFinished {
+            /* ======== FADE IN ========= */
+            centerTextDefaultRefreshOpacity = 0.0
+            centerText = text
             timeline {
-                /* ======== FADE OUT ========= */
                 val nodes = centerTextContainer.children.shuffled()
                 keyframe(0.seconds) {
-                    keyvalue(gaussianBlur.radiusProperty(), 0)
-                }
-                keyframe(((nodes.size * letterDelay + fadeDuration) / 2).seconds) {
                     keyvalue(gaussianBlur.radiusProperty(), maxGaussianBlurRadius)
                 }
-                for ((index: Int, node: Node) in nodes.withIndex()) {
+                keyframe((nodes.size * letterDelay + fadeDuration + 0.15).seconds) {
+                    keyvalue(gaussianBlur.radiusProperty(), 0)
+                }
+                for ((index, node) in nodes.withIndex()) {
                     keyframe(0.seconds) {
-                        keyValueShow(node)
+                        keyValueHide(node)
                     }
                     val delay = 0 + index * letterDelay
                     keyframe(delay.seconds) {
-                        keyValueShow(node)
+                        keyValueHide(node)
                     }
                     val fadeOutTime = delay + fadeDuration
                     keyframe(fadeOutTime.seconds) {
-                        keyValueHide(node)
-                    }
-                }
-            }.setOnFinished {
-                /* ======== FADE IN ========= */
-                centerTextDefaultRefreshOpacity = 0.0
-                centerText = nextName
-                timeline {
-                    val nodes = centerTextContainer.children.shuffled()
-                    keyframe(0.seconds) {
-                        keyvalue(gaussianBlur.radiusProperty(), maxGaussianBlurRadius)
-                    }
-                    keyframe((nodes.size * letterDelay + fadeDuration + 0.15).seconds) {
-                        keyvalue(gaussianBlur.radiusProperty(), 0)
-                    }
-                    for ((index, node) in nodes.withIndex()) {
-                        keyframe(0.seconds) {
-                            keyValueHide(node)
-                        }
-                        val delay = 0 + index * letterDelay
-                        keyframe(delay.seconds) {
-                            keyValueHide(node)
-                        }
-                        val fadeOutTime = delay + fadeDuration
-                        keyframe(fadeOutTime.seconds) {
-                            keyValueShow(node)
-                        }
+                        keyValueShow(node)
                     }
                 }
             }
         }
+    }
+
+    private fun forwardToNext() {
+        shuffler?.let {
+            changeTextAnimated(it.next().name)
+        }
+    }
+
+    private fun Node.showActionPopupMenu() {
+        contextmenu {
+            item("重新加载") {
+                action {
+                    reloadList()
+                }
+            }
+            item("排除") {
+                isDisable = true
+                action {
+                    throw UnsupportedOperationException("Not implemented")
+                }
+            }
+            item("退出"){
+                action {
+                    Platform.exit()
+                }
+            }
+        }
+    }
+
+    private fun clear() {
+        changeTextAnimated("--")
     }
 
     private fun Node.initListeners() {
@@ -240,7 +277,7 @@ class DisplayView : View() {
             mouseEvent ?: return@eventHandler
             when (mouseEvent.button) {
                 MouseButton.PRIMARY -> forwardToNext()
-                MouseButton.SECONDARY -> reloadList()
+                MouseButton.SECONDARY -> this@initListeners.showActionPopupMenu()
                 else -> {
                     // ignore
                 }
@@ -253,6 +290,7 @@ class DisplayView : View() {
                 when {
                     isControlDown && code == KeyCode.R -> reloadList()
                     code in arrayOf(KeyCode.SPACE, KeyCode.ENTER) -> forwardToNext()
+                    code == KeyCode.ESCAPE -> clear()
                 }
             }
         }
