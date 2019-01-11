@@ -70,13 +70,17 @@ class DisplayView : View() {
         setWindowMinSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
         currentWindow?.center()
         currentStage?.let {
-            it.isAlwaysOnTop = true
+            //            it.isAlwaysOnTop = true
         }
 
         with(root) {
-            val floatingFragment:FloatingFragment = find(FloatingFragment::class, mapOf("owner" to this@DisplayView))
-            floatingFragment.openModal(StageStyle.TRANSPARENT)
-            floatingFragment.initialize()
+//            val transparentUtilityWindow: TransparentUtilityWindow = find(TransparentUtilityWindow::class)
+//            transparentUtilityWindow.openWindow(StageStyle.UTILITY)
+//            transparentUtilityWindow.postInstantiation()
+
+            val floatingFragment: FloatingFragment = find(FloatingFragment::class)
+            floatingFragment.openWindow(StageStyle.TRANSPARENT)
+            floatingFragment.postInstantiation()
 
             background = Background(BackgroundFill(COLOR_INDIGO, CornerRadii.EMPTY, Insets.EMPTY))
 //            isFocusTraversable = true /* make sure this node can respond to key events properly */

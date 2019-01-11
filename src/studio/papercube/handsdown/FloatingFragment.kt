@@ -1,7 +1,10 @@
 package studio.papercube.handsdown
 
+import javafx.event.Event
 import javafx.geometry.Insets
 import javafx.scene.Node
+import javafx.scene.effect.BlurType
+import javafx.scene.effect.DropShadow
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.Background
 import javafx.scene.layout.BackgroundFill
@@ -21,11 +24,12 @@ class FloatingFragment : Fragment() {
 
     init {
         currentWindow?.scene?.fill = null
+//        currentStage?.initStyle(StageStyle.UTILITY)
         root.apply {
-            background = Background(BackgroundFill(COLOR_INDIGO, CornerRadii(20.0), Insets.EMPTY))
-            padding = Insets(20.0)
-            center = label("点按以打开"){
-                textFill = Color.WHITE
+            background = Background(BackgroundFill(COLOR_LIGHT_GREY, CornerRadii(5.0), Insets(10.0)))
+            padding = Insets(30.0)
+            center = label("轻触以打开"){
+                textFill = Color.BLACK
             }
 
             initListeners()
@@ -34,7 +38,7 @@ class FloatingFragment : Fragment() {
         owner = params["owner"] as? DisplayView
     }
 
-    fun initialize() {
+    fun postInstantiation() {
 //        println("$currentWindow, $currentStage, $modalStage")
         val visualBounds = Screen.getPrimary().visualBounds
 
@@ -46,7 +50,13 @@ class FloatingFragment : Fragment() {
             y = yPos
         }
 
-        modalStage?.isAlwaysOnTop = true
+        modalStage?.apply {
+            isAlwaysOnTop = true
+            setOnCloseRequest(Event::consume)
+        }
+
+        val effectDropShadow = DropShadow(BlurType.GAUSSIAN, Color.BLACK, 7.0, 0.0, 2.0, 2.0)
+        root.effect = effectDropShadow
     }
 
     private fun onMouseDragged(mouseEvent: MouseEvent) {
@@ -66,6 +76,7 @@ class FloatingFragment : Fragment() {
     private fun onMouseClickedNoDrag(mouseEvent: MouseEvent) {
         find(DisplayView::class).currentStage?.apply {
             show()
+            requestFocus()
             isIconified = false
         }
     }
