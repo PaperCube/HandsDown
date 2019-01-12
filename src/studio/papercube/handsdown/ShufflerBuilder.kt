@@ -4,8 +4,10 @@ import java.io.File
 import java.util.stream.Collectors
 
 object ShufflerBuilder {
+    var shufflerDataSourceFileName: String = "list"
+
     fun fromFile(): Shuffler<PersonItem> {
-        val list = File("list").bufferedReader(Charsets.UTF_8)
+        val list = File(shufflerDataSourceFileName).bufferedReader(Charsets.UTF_8)
                 .lines()
                 .filter(String::isNotBlank)
                 .map(PersonItem.Companion::parse)
