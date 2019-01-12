@@ -16,6 +16,7 @@ private fun <T> MutableList<T>.swap(index1: Int, index2: Int) {
 //}
 
 interface Shuffler<out T> : Iterator<T>, Iterable<T> {
+    val size: Int
     override fun iterator(): Iterator<T> {
         return this
     }
@@ -23,7 +24,7 @@ interface Shuffler<out T> : Iterator<T>, Iterable<T> {
 
 class UnweightedShuffler<out T>(items: List<T>) : Shuffler<T> {
     private val list = ArrayList(items)
-    private val size = items.size
+    override val size = items.size
 
     private var index = 0
 
@@ -47,7 +48,7 @@ class UnweightedShuffler<out T>(items: List<T>) : Shuffler<T> {
 
 class WeightedShuffler<out T : Weighed>(items: List<T>) : Shuffler<T> {
     private val list = ArrayList(items)
-    private val size = items.size
+    override val size = items.size
     private val weightRange = DoubleArray(items.size + 1)
     private val weightSum: Double
 
